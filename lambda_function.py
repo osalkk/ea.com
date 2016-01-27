@@ -8,8 +8,7 @@ s=Session(region_name='eu-west-1')
 awslambda = s.client('lambda')
 idlist=[]
 
-def crawl():
-    print("crawl started")
+def lambda_handler(event, context):
     class MyHTMLParser(HTMLParser):
         def handle_starttag(self, tag, attrs):
             for attr in attrs:
@@ -35,7 +34,6 @@ def crawl():
         parser = MyHTMLParser()
         parser.feed(data['results_html'])
         i=i+10
-    #print(len(idlist))
 
     #Divide the ids to templists and create a dict like {0: [ '206500'],1:['2323232']}
     list_dic= {}
@@ -47,22 +45,12 @@ def crawl():
                 templist.append(idlist.pop())
         list_dic[dicid] = templist
         dicid+=1
-    #print(list_dic)
 
     for key,value in list_dic.items():
-        print("Invoking function Crawl")
         response = awslambda.invoke(
         FunctionName="Crawl",
         InvocationType='Event',
         Payload= '{"key":'+json.dumps(value)+'}')
-
-
-    print("Lambda functions created and invoked")
-
-
-
-def lambda_handler(event, context):
-    crawl()
 
 if __name__ == "__main__":
     try:

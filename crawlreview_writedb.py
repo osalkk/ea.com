@@ -1,5 +1,4 @@
 from __future__ import print_function
-import json
 from HTMLParser import HTMLParser
 import requests
 from boto3 import Session
