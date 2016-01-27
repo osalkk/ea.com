@@ -1,0 +1,180 @@
+from __future__ import print_function
+import json
+from HTMLParser import HTMLParser
+import requests
+import threading
+from boto3.session import Session
+import time
+
+
+
+session = Session(region_name='eu-west-1')
+dynamodb = session.resource('dynamodb')
+table = dynamodb.Table('GameReviews')
+game=[]
+idlist=[]
+namestemp=[]
+new_appid=""
+s = requests.Session()
+
+def crawl():
+    class MyHTMLParser(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            for attr in attrs:
+                if "data-ds-appid" in attr:
+                    game_id=attr[1]
+                    if game_id not in idlist:
+                        idlist.append(game_id)
+                        return(idlist)
+
+    #Find the early access game count
+    url='http://store.steampowered.com/search/tabpaginated/render/?query=&start=10&count=1&genre=70&tab=NewReleases&cc=TR&l=english'
+    r=requests.get(url)
+    data = json.loads(r.text)
+    r.close()
+    total_count=data['total_count']
+    pagination=total_count/10+2
+
+    #Create the list
+    i=0
+    while(i<pagination*10):
+        url='http://store.steampowered.com/search/tabpaginated/render/?query=&start='+str(i)+'&count=10+&genre=70&tab=NewReleases&cc=TR&l=english'
+        r_new=requests.get(url)
+        data = json.loads(r_new.text)
+        r_new.close()
+        parser = MyHTMLParser()
+        parser.feed(data['results_html'])
+        i=i+10
+
+    return(idlist)
+
+
+def hede(appid):
+
+    class reviews(HTMLParser):
+
+        def __init__(self):
+            HTMLParser.__init__(self)
+            self.inLink = False
+            self.dataArray = []
+            self.countLanguages = 0
+            self.lasttag = None
+            self.lastname = None
+            self.lastvalue = None
+
+        def handle_starttag(self, tag, attrs):
+            self.inLink = False
+            if tag == 'span':
+                for name, value in attrs:
+                    if name == 'class' and value =='user_reviews_count':
+                        self.countLanguages += 1
+                        self.inLink = True
+                        self.lasttag = tag
+
+        def handle_endtag(self, tag):
+            if tag == "span":
+                self.inlink = False
+
+        def handle_data(self, data):
+            #threading.Thread(target=self.handle_data()).start()
+            if self.lasttag == 'span' and self.inLink and data.strip():
+                values=data.replace('(', '').replace(')', '').replace(',','')
+                if values:
+                    namestemp.append(int(values))
+
+    namestemp=[]
+    #new_appid=idlist.pop()
+    url="http://store.steampowered.com/app/"+appid
+    cookie = dict(birthtime='-189395999')
+    r_new=requests.get(url,cookies=cookie)
+    data=r_new.text
+    r_new.close()
+    parser = reviews()
+    parser.feed(data)
+    parser.close()
+    gameid={}
+    gameid['Id']=appid
+    if len(namestemp)>0:
+            positive=int(namestemp[0])
+            negative=int(namestemp[1])
+    else:
+        positive=0
+        negative=0
+    gameid['Positive']=positive
+    gameid['Negative']=negative
+    game.append(gameid)
+    '''for gamename in game:
+        print(gamename)
+        try:
+                table.put_item(
+                   Item={
+                        'AppId': gamename['Id'],
+                        'Positive': gamename['Positive'],
+                        'Negative': gamename['Negative'],
+                         }
+                )
+        except:
+            print("break")'''
+    return
+
+
+def review():
+    print("review crawl started")
+    list_threads = []
+    for appid in idlist:
+        for appid in idlist:
+            for num_thread in range(1, 4):
+                #print(appid)
+                t = threading.Thread(target=hede,args=(appid,))
+                list_threads.append(t)
+                t.start()
+        idlist.remove(appid)
+    print("All threads are started")
+    [t.join() for t in list_threads]
+    print("All threads completed")
+    '''#print(game)
+    for gamename in game:
+        print(gamename)
+        try:
+                table.put_item(
+                   Item={
+                        'AppId': gamename['Id'],
+                        'Positive': gamename['Positive'],
+                        'Negative': gamename['Negative'],
+                         }
+                )
+        except:
+            print("break")
+
+        '''
+
+def lambda_handler(event, context):
+    localtime = time.asctime( time.localtime(time.time()) )
+    print("before crawl",localtime)
+    list_threads = []
+
+    for num_thread in range(1, 4):
+        t = threading.Thread(target=crawl,args=())
+        list_threads.append(t)
+        t.start()
+    print("All threads are started")
+    [t.join() for t in list_threads]
+    print("All threads completed")
+    print(threading.active_count())
+    print("len idlist:",len(idlist))
+    localtime = time.asctime( time.localtime(time.time()) )
+    print("after crawl",localtime)
+    localtime = time.asctime( time.localtime(time.time()) )
+    print("before review",localtime)
+    review()
+    localtime = time.asctime( time.localtime(time.time()) )
+    print("after review",localtime)
+
+
+'''
+if __name__ == "__main__":
+    try:
+        lambda_handler("event","asd")
+    except Exception as err:
+        print(err)
+'''
