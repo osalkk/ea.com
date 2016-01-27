@@ -1,14 +1,15 @@
 from __future__ import print_function
-from boto3 import Session
+import json
 from HTMLParser import HTMLParser
 import requests
-
+from boto3 import Session
 
 session = Session(region_name='eu-west-1')
 dynamodb = session.resource('dynamodb')
 table = dynamodb.Table('GameReviews')
 
 def lambda_handler(event, context):
+
     class reviews(HTMLParser):
 
         def __init__(self):
@@ -64,4 +65,8 @@ def lambda_handler(event, context):
         except:
             print("break")
 
-
+if __name__ == "__main__":
+    try:
+        lambda_handler("event","asd")
+    except Exception as err:
+        print(err)

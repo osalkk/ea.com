@@ -36,6 +36,8 @@ def crawl():
         parser.feed(data['results_html'])
         i=i+10
     #print(len(idlist))
+
+    #Divide the ids to templists and create a dict like {0: [ '206500'],1:['2323232']}
     list_dic= {}
     dicid=0
     while len(idlist)>0:
@@ -47,36 +49,12 @@ def crawl():
         dicid+=1
     #print(list_dic)
 
-
     for key,value in list_dic.items():
-        FunctionName='Crawler'+str(key)
-        response = awslambda.list_functions(
-        MaxItems=1230
-        )
-        current_funcs=[]
-        for func in response['Functions']:
-            current_funcs.append(func['FunctionName'])
-        if FunctionName not in current_funcs:
-            response = awslambda.create_function(
-                FunctionName=FunctionName,
-                Runtime='python2.7',
-                Role='arn:aws:iam::130575395405:role/lambda_basic_execution',
-                Handler='lambda_function.lambda_handler',
-                Code={
-                    'S3Bucket': 'early-lambda-codes',
-                    'S3Key': 'reviewcrawler.zip'
-                },
-                Description='Review Crawler',
-                Timeout=120,
-                MemorySize=128,
-                Publish=True
-            )
-        print("Invoking function ",FunctionName)
+        print("Invoking function Crawl")
         response = awslambda.invoke(
-        FunctionName=FunctionName,
-        InvocationType='RequestResponse',
+        FunctionName="Crawl",
+        InvocationType='Event',
         Payload= '{"key":'+json.dumps(value)+'}')
-        print({"key":json.dumps(value)})
 
 
     print("Lambda functions created and invoked")
