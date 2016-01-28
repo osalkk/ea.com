@@ -53,15 +53,40 @@ def lambda_handler(event, context):
         else:
             positive=0
             negative=0
+
+        #Query old data
+        results = table.query(
+            KeyConditionExpression=Key('AppId').eq(appid)
+        )
+        newnegative=0
+        newpositive=0
+        for i in results['Items']:
+            oldpositive=i['Positive']
+            oldnegative=i['Negative']
+            if positive!=oldpositive:
+                print(positive,oldpositive)
+                newpositive=positive
+                print("changed positive,old was:",oldpositive,"new is:",newpositive)
+            else:
+                newpositive=positive
+
+            if negative!=oldnegative:
+                print(negative,oldnegative)
+                newnegative=negative
+                print("changed negative,old was:",oldnegative,"new is:",newnegative)
+
+            else:
+                newnegative=negative
+
         try:
                 table.put_item(
                    Item={
                         'AppId': appid,
-                        'Positive': positive,
-                        'Negative': negative,
+                        'Positive': newpositive,
+                        'Negative': newnegative,
                          }
                 )
-                print("Updated :",appid,positive,negative)
+                print("Updated :",appid,newpositive,newnegative)
         except Exception as e:
             print(e)
 
