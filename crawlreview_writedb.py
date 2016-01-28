@@ -2,6 +2,7 @@ from __future__ import print_function
 from HTMLParser import HTMLParser
 import requests
 from boto3 import Session
+from boto3.dynamodb.conditions import Key, Attr
 
 session = Session(region_name='eu-west-1')
 dynamodb = session.resource('dynamodb')
