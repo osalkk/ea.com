@@ -63,20 +63,22 @@ def lambda_handler(event, context):
         newpositive=0
         updatepositive=False
         updatenegative=False
+        changes=0
         for i in results['Items']:
             oldpositive=i['Positive']
             oldnegative=i['Negative']
             if positive!=oldpositive:
                 updatepositive=True
                 newpositive=positive
-                #print("changed positive,old was:",oldpositive,"new is:",newpositive)
+                print("changed positive,old was:",oldpositive,"new is:",newpositive)
+                changes=changes+1
             else:
                 newpositive=positive
             if negative!=oldnegative:
                 updatenegative=True
                 newnegative=negative
-                #print("changed negative,old was:",oldnegative,"new is:",newnegative)
-
+                print("changed negative,old was:",oldnegative,"new is:",newnegative)
+                changes=changes+1
             else:
                 newnegative=negative
 
@@ -89,7 +91,8 @@ def lambda_handler(event, context):
                                 'Negative': newnegative,
                                  }
                         )
-                        print("Updated :",appid,newpositive,newnegative)
+                        print("Changes are updated :",appid,newpositive,newnegative)
+                        print("Total change:",changes)
                 except Exception as e:
                     print(e)
 
