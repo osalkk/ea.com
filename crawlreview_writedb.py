@@ -62,8 +62,8 @@ def lambda_handler(event, context):
                          }
                 )
                 print("Updated :",appid,positive,negative)
-        except:
-            print("break")
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     try:
