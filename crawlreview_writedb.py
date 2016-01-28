@@ -61,35 +61,37 @@ def lambda_handler(event, context):
         )
         newnegative=0
         newpositive=0
+        updatepositive=False
+        updatenegative=False
         for i in results['Items']:
             oldpositive=i['Positive']
             oldnegative=i['Negative']
             if positive!=oldpositive:
-                print(positive,oldpositive)
+                updatepositive=True
                 newpositive=positive
-                print("changed positive,old was:",oldpositive,"new is:",newpositive)
+                #print("changed positive,old was:",oldpositive,"new is:",newpositive)
             else:
                 newpositive=positive
-
             if negative!=oldnegative:
-                print(negative,oldnegative)
+                updatenegative=True
                 newnegative=negative
-                print("changed negative,old was:",oldnegative,"new is:",newnegative)
+                #print("changed negative,old was:",oldnegative,"new is:",newnegative)
 
             else:
                 newnegative=negative
 
-        try:
-                table.put_item(
-                   Item={
-                        'AppId': appid,
-                        'Positive': newpositive,
-                        'Negative': newnegative,
-                         }
-                )
-                print("Updated :",appid,newpositive,newnegative)
-        except Exception as e:
-            print(e)
+            if updatepositive or updatenegative:
+                try:
+                        table.put_item(
+                           Item={
+                                'AppId': appid,
+                                'Positive': newpositive,
+                                'Negative': newnegative,
+                                 }
+                        )
+                        print("Updated :",appid,newpositive,newnegative)
+                except Exception as e:
+                    print(e)
 
 if __name__ == "__main__":
     try:
