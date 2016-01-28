@@ -61,6 +61,7 @@ def lambda_handler(event, context):
                         'Negative': negative,
                          }
                 )
+                print("Updated :",appid,positive,negative)
         except:
             print("break")
 
