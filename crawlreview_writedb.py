@@ -3,6 +3,8 @@ from HTMLParser import HTMLParser
 import requests
 from boto3 import Session
 from boto3.dynamodb.conditions import Key, Attr
+import uuid,time
+
 
 session = Session(region_name='eu-west-1')
 dynamodb = session.resource('dynamodb')
@@ -48,6 +50,24 @@ def lambda_handler(event, context):
         parser = reviews()
         parser.feed(data)
         parser.close()
+
+        #News count
+        url='http://api.steampowered.com' \
+            '/ISteamNews/GetNewsForApp/v2' \
+            '?appid=230230' \
+            '&maxlength=1' \
+            '&count=1000'
+
+        r_new=requests.get(url)
+        news=len(r_new.json()['appnews']['newsitems'])
+
+        #Players Count
+        url='http://api.steampowered.com' \
+        '/ISteamUserStats/GetNumberOfCurrentPlayers/v1' \
+        '?appid=230230'
+
+        r_new=requests.get(url)
+        players=r_new.json()['response']['player_count']
         if len(namestemp)>0:
                 positive=int(namestemp[0])
                 negative=int(namestemp[1])
@@ -86,9 +106,13 @@ def lambda_handler(event, context):
                 try:
                         table.put_item(
                            Item={
+                                'Id' : uuid.uuid4(),
                                 'AppId': appid,
                                 'Positive': newpositive,
                                 'Negative': newnegative,
+                                'News':news,
+                                'Players':players,
+                                'Date':time.time()
                                  }
                         )
                         print("Changes are updated :",appid,newpositive,newnegative)
