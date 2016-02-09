@@ -8,7 +8,7 @@ import uuid,time
 
 session = Session(region_name='eu-west-1')
 dynamodb = session.resource('dynamodb')
-table = dynamodb.Table('GameReviews')
+table = dynamodb.Table('GameMetrics')
 
 def lambda_handler(event, context):
 
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
         #News count
         url='http://api.steampowered.com' \
             '/ISteamNews/GetNewsForApp/v2' \
-            '?appid=230230' \
+            '?appid='+appid+ \
             '&maxlength=1' \
             '&count=1000'
 
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
         #Players Count
         url='http://api.steampowered.com' \
         '/ISteamUserStats/GetNumberOfCurrentPlayers/v1' \
-        '?appid=230230'
+        '?appid='+appid
 
         r_new=requests.get(url)
         players=r_new.json()['response']['player_count']
@@ -76,7 +76,7 @@ def lambda_handler(event, context):
             negative=0
 
         #Query old data
-        results = table.query(
+        '''results = table.query(
             KeyConditionExpression=Key('AppId').eq(appid)
         )
         newnegative=0
@@ -103,22 +103,23 @@ def lambda_handler(event, context):
                 newnegative=negative
 
             if updatepositive or updatenegative:
-                try:
-                        table.put_item(
-                           Item={
-                                'Id' : uuid.uuid4(),
-                                'AppId': appid,
-                                'Positive': newpositive,
-                                'Negative': newnegative,
-                                'News':news,
-                                'Players':players,
-                                'Date':time.time()
-                                 }
-                        )
-                        print("Changes are updated :",appid,newpositive,newnegative)
-                        print("Total change:",changes)
-                except Exception as e:
-                    print(e)
+            '''
+        try:
+                table.put_item(
+                   Item={
+                        'Id' : str(uuid.uuid4()),
+                        'AppId': appid,
+                        'Positive': positive,
+                        'Negative': negative,
+                        'News':news,
+                        'Players':players,
+                        'Date':str(time.time())
+                         }
+                )
+                print("Changes are updated :",appid,newpositive,newnegative)
+                print("Total change:",changes)
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     try:
