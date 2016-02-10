@@ -51,6 +51,10 @@ def lambda_handler(event, context):
         FunctionName="Crawl",
         InvocationType='Event',
         Payload= '{"key":'+json.dumps(value)+'}')
+        response = awslambda.invoke(
+        FunctionName="GameInfo",
+        InvocationType='Event',
+        Payload= '{"key":'+json.dumps(value)+'}')
 
 if __name__ == "__main__":
     try:

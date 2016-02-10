@@ -113,11 +113,9 @@ def lambda_handler(event, context):
                         'Negative': negative,
                         'News':news,
                         'Players':players,
-                        'Date':str(time.time())
+                        'Date':str(time.time()*1000)
                          }
                 )
-                print("Changes are updated :",appid,newpositive,newnegative)
-                print("Total change:",changes)
         except Exception as e:
             print(e)
 
