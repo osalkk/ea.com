@@ -42,6 +42,7 @@ def lambda_handler(event, context):
                 if values:
                     namestemp.append(int(values))
     for appid in event["key"]:
+        appid=appid.split(",")[0]
         namestemp=[]
         url="http://store.steampowered.com/app/"+appid
         cookie = dict(birthtime='-189395999')
@@ -75,35 +76,7 @@ def lambda_handler(event, context):
             positive=0
             negative=0
 
-        #Query old data
-        '''results = table.query(
-            KeyConditionExpression=Key('AppId').eq(appid)
-        )
-        newnegative=0
-        newpositive=0
-        updatepositive=False
-        updatenegative=False
-        changes=0
-        for i in results['Items']:
-            oldpositive=i['Positive']
-            oldnegative=i['Negative']
-            if positive!=oldpositive:
-                updatepositive=True
-                newpositive=positive
-                print("changed positive,old was:",oldpositive,"new is:",newpositive)
-                changes=changes+1
-            else:
-                newpositive=positive
-            if negative!=oldnegative:
-                updatenegative=True
-                newnegative=negative
-                print("changed negative,old was:",oldnegative,"new is:",newnegative)
-                changes=changes+1
-            else:
-                newnegative=negative
 
-            if updatepositive or updatenegative:
-            '''
         try:
                 table.put_item(
                    Item={
@@ -113,7 +86,7 @@ def lambda_handler(event, context):
                         'Negative': negative,
                         'News':news,
                         'Players':players,
-                        'Date':str(time.time()*1000)
+                        'Date':int(time.time()*1000)
                          }
                 )
         except Exception as e:
